@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/boasihq/interactive-inputs/internal/config"
+	"github.com/boasihq/interactive-inputs/internal/fields"
 	"github.com/boasihq/interactive-inputs/internal/runner"
 	githubactions "github.com/sethvargo/go-githubactions"
 
@@ -34,9 +35,18 @@ func run() error {
 			return err
 		}
 	} else {
+		// Parse fields even when skipping config parse
+		interactiveInput := action.GetInput("interactive")
+		fields, err := fields.MarshalStringIntoValidFieldsStruct(interactiveInput, action)
+		if err != nil {
+			action.Errorf("Can't convert the 'fields' input to a valid fields config: %s", interactiveInput)
+			// Continue with nil fields if parsing fails
+		}
+		
 		cfg = &config.Config{
 			Action:  action,
 			Timeout: config.DefaultTimeout,
+			Fields:  fields,
 		}
 	}
 

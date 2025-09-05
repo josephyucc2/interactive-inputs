@@ -227,6 +227,9 @@ func InvokeAction(ctx context.Context, ctxCancel context.CancelFunc, cfg *config
 
 	} else {
 		// Find an available port starting from the configured start port
+		if cfg.StartPort == 0 {
+			cfg.StartPort = 8080
+		}
 		availablePort, err := findAvailablePort(cfg.StartPort)
 		if err != nil {
 			cfg.Action.Errorf("Failed to find available port: %v", err)
