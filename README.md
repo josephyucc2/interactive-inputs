@@ -57,11 +57,98 @@ Here are some examples of the Interactive Input action... in action 👀😔:
 
 To get started, there are three main steps:
 
-1. Sign up to NGROK and get your auth token if you do not already have one by [**clicking here**](https://dashboard.ngrok.com/signup)
+1. Choose your hosting method:
+   - **Network IP** (default): Use the runner's network IP address - no external dependencies required
+   - **NGROK** (optional): Sign up to NGROK and get your auth token if you do not already have one by [**clicking here**](https://dashboard.ngrok.com/signup)
 2. Add this action `boasihq/interactive-inputs@v2` to your workflow file. See below the [various example implemenations](#example) for inspiration.
 3. Use the predictable output variables from your interactive input portal to create dynamic workflows.
 
 > Note, this action requires an ARM64 or AMD64 (x86) runner to run i.e. `ubuntu-latest`
+
+### Hosting Methods
+
+This action supports two hosting methods to expose the interactive input portal:
+
+#### Network IP (Default)
+Network IP is the default hosting method that uses the runner's network IP address. This method:
+
+- **No External Dependencies**: Doesn't require ngrok or external services
+- **Direct Access**: Uses the runner's actual network IP address
+- **Auto-Detection**: Automatically detects the network IP if not specified
+- **Faster Setup**: No need to configure external tunnel services
+- **Port Management**: Automatically handles port conflicts with auto-increment
+
+#### NGROK (Optional)
+For environments where you need external access or prefer tunnel-based hosting, you can use NGROK. This method:
+
+- **External Access**: Provides access from anywhere on the internet
+- **Secure Tunnel**: Creates a secure tunnel to expose your local server
+- **Custom Domains**: Support for custom domains (paid plans)
+- **Requires Setup**: Needs ngrok account and auth token
+
+#### Basic Usage (Network IP - Default)
+No additional configuration needed, just use the action:
+
+```yaml
+- name: Interactive Inputs (Default - Network IP)
+  uses: boasihq/interactive-inputs@v2
+  with:
+    # use-network-ip: true  # This is now the default
+    # network-ip: "192.168.1.100"  # Optional: specify custom IP
+    # start-port: "8080"           # Optional: specify starting port (default: 8080)
+    title: 'Interactive Input Portal'
+    interactive: |
+      fields:
+        - label: name
+          properties:
+            display: Your Name
+            type: text
+            required: true
+```
+
+#### Using NGROK (Optional)
+To use NGROK instead of Network IP:
+
+```yaml
+- name: Interactive Inputs with NGROK
+  uses: boasihq/interactive-inputs@v2
+  with:
+    use-network-ip: false  # Disable Network IP mode
+    ngrok-authtoken: ${{ secrets.NGROK_AUTHTOKEN }}  # Required for NGROK
+    title: 'Interactive Input Portal'
+    interactive: |
+      fields:
+        - label: name
+          properties:
+            display: Your Name
+            type: text
+            required: true
+```
+
+#### Port Management
+The action automatically handles port conflicts by:
+
+- **Auto-Detection**: Automatically detects if the default port (8080) is occupied
+- **Auto-Increment**: Automatically tries the next available port (8081, 8082, etc.)
+- **Configurable Start Port**: You can specify a custom starting port using `start-port`
+- **Smart Retry**: Checks up to 100 ports starting from your specified port
+- **Detailed Logging**: Shows which port is being used and if port switching occurred
+
+Example with custom starting port:
+```yaml
+- name: Interactive Inputs with Custom Port
+  uses: boasihq/interactive-inputs@v2
+  with:
+    use-network-ip: true
+    start-port: "9000"  # Will try 9000, 9001, 9002, etc.
+    title: 'Interactive Input Portal'
+    # ... other configuration
+```
+
+**Note**: When using Network IP mode, ensure that:
+- The runner is accessible from your network
+- Firewall rules allow connections to port 8080
+- The network IP is reachable from your location
 
 ### Sending notifications to Slack/ Discord
 

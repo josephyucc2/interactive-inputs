@@ -62,6 +62,15 @@ type Config struct {
 	// interactive inputs portals
 	NgrokAuthtoken string
 
+	// UseNetworkIP determines whether to use the runner's network IP instead of ngrok tunnel
+	UseNetworkIP bool
+
+	// NetworkIP is the specific network IP address to use (if not provided, will auto-detect)
+	NetworkIP string
+
+	// StartPort is the starting port number for the server (will auto-increment if occupied)
+	StartPort int
+
 	Action *githubactions.Action
 }
 
@@ -71,6 +80,10 @@ const (
 	//
 	// Defaults to 300 seconds (5 minutes)
 	DefaultTimeout int = 300
+
+	// DefaultStartPort is the default starting port number for the server
+	// Will auto-increment if occupied
+	DefaultStartPort int = 8080
 )
 
 // NewFromInputs creates a new Config instance from the provided GitHub Actions inputs.
@@ -84,9 +97,28 @@ func NewFromInputs(action *githubactions.Action) (*Config, error) {
 
 	// handle input for fetching ngrok authtoken
 	ngrokAuthtokenInput := action.GetInput("ngrok-authtoken")
-	if ngrokAuthtokenInput == "" {
-		action.Errorf("The ngrok-authtoken was not provided, this is needed before the action can be used")
+	useNetworkIPInput := action.GetInput("use-network-ip") == "true"
+	networkIPInput := action.GetInput("network-ip")
+	
+	// If using ngrok (not network IP), ngrok token is required
+	if !useNetworkIPInput && ngrokAuthtokenInput == "" {
+		action.Errorf("The ngrok-authtoken was not provided, this is needed when not using network IP mode")
 		return nil, errors.ErrNgrokAuthtokenNotProvided
+	}
+
+	// handle input for fetching start port
+	var startPort int = DefaultStartPort
+	startPortInput := action.GetInput("start-port")
+	if startPortInput != "" {
+		startPort, err = strconv.Atoi(startPortInput)
+		if err != nil {
+			action.Errorf("Cannot convert the 'start-port' input (%s) to an int!", startPortInput)
+			return nil, errors.ErrInvalidTimeoutValueProvided
+		}
+		if startPort < 1 || startPort > 65535 {
+			action.Errorf("Start port must be between 1 and 65535, got: %d", startPort)
+			return nil, errors.ErrInvalidTimeoutValueProvided
+		}
 	}
 
 	// handle input for fetching github token
@@ -177,6 +209,10 @@ func NewFromInputs(action *githubactions.Action) (*Config, error) {
 
 		NgrokAuthtoken: ngrokAuthtokenInput,
 		GithubToken:    githubTokenInput,
+
+		UseNetworkIP: useNetworkIPInput,
+		NetworkIP:    networkIPInput,
+		StartPort:    startPort,
 
 		NotifierSlackEnabled:  notifierSlackEnabledInput,
 		NotifierSlackToken:    notifierSlackToken,

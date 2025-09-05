@@ -1,4 +1,4 @@
-name: "Interactive Inputs"
+name: "Local Interactive Inputs"
 description: "Introduce dynamic inputs to your workflows and use them in your actions"
 author: "Leon Silcott <leon@boasi.io>"
 inputs:
@@ -39,7 +39,21 @@ inputs:
 
   ngrok-authtoken:
     description: "The authtoken for ngrok used to expose the interactive inputs form"
-    required: true
+    required: false
+
+  use-network-ip:
+    description: "Whether to use the runner's network IP instead of ngrok tunnel"
+    required: false
+    default: "true"
+
+  network-ip:
+    description: "The network IP address to use (if not provided, will auto-detect)"
+    required: false
+
+  start-port:
+    description: "The starting port number for the server (default: 8080, will auto-increment if occupied)"
+    required: false
+    default: "8080"
 
   github-token:
     description: "The token used to authenticate with GitHub API"

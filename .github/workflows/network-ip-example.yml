@@ -1,0 +1,186 @@
+name: '[範例] 使用網路 IP 的互動式輸入'
+
+on:
+  workflow_dispatch:
+
+jobs:
+  interactive-inputs:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - name: 互動式輸入步驟（預設使用網路 IP）
+        id: interactive-inputs
+        uses: boasihq/interactive-inputs@v2
+        with:
+          # use-network-ip: true  # 現在是預設值，不需要設定
+          # network-ip: "192.168.1.100"  # 可選：指定自訂 IP
+          # start-port: "8080"           # 可選：指定起始 port（預設：8080）
+          notifier-slack-enabled: "false"
+          notifier-discord-enabled: "false"
+          timeout: 300
+          title: '🌐 預設使用網路 IP 的互動式輸入範例'
+          interactive: |
+            fields:
+              - label: 概述
+                properties:
+                  type: textarea
+                  description: 此範例展示如何使用網路 IP 來建置互動式輸入
+                  defaultValue: "這是一個使用網路 IP 的互動式輸入範例。此方法不需要 ngrok 或外部服務，直接使用 runner 的網路 IP 地址。"
+                  readOnly: true
+              - label: 使用者姓名
+                properties:
+                  display: 請輸入您的姓名
+                  type: text
+                  description: 您的完整姓名
+                  maxLength: 50
+                  required: true
+                  placeholder: 例如：張三
+              - label: 電子郵件
+                properties:
+                  display: 電子郵件地址
+                  type: text
+                  description: 用於接收通知的電子郵件
+                  required: true
+                  placeholder: example@company.com
+              - label: 部門
+                properties:
+                  display: 選擇您的部門
+                  type: select
+                  description: 您所屬的部門
+                  choices:
+                    - 工程部
+                    - 產品部
+                    - 設計部
+                    - 行銷部
+                    - 營運部
+                    - 其他
+                  required: true
+              - label: 專案類型
+                properties:
+                  display: 選擇專案類型（可多選）
+                  type: multiselect
+                  description: 您感興趣的專案類型
+                  choices: 
+                    ["前端開發", "後端開發", "行動應用", "資料分析", "機器學習", "DevOps", "測試", "文件撰寫"]
+                  required: true
+              - label: 優先級
+                properties:
+                  display: 專案優先級
+                  type: number
+                  description: 請輸入優先級（1-5，5為最高）
+                  minNumber: 1
+                  maxNumber: 5
+                  placeholder: 3
+                  required: true
+              - label: 預算範圍
+                properties:
+                  display: 預算範圍
+                  type: select
+                  description: 專案的預算範圍
+                  choices:
+                    - 低於 $10,000
+                    - $10,000 - $50,000
+                    - $50,000 - $100,000
+                    - $100,000 - $500,000
+                    - 超過 $500,000
+                  required: true
+              - label: 緊急程度
+                properties:
+                  display: 是否為緊急專案？
+                  type: boolean
+                  description: 此專案是否需要立即處理
+                  defaultValue: 'false'
+                  required: true
+              - label: 專案描述
+                properties:
+                  display: 專案詳細描述
+                  type: textarea
+                  description: 請詳細描述您的專案需求和目標
+                  maxLength: 1000
+                  placeholder: 請描述專案的背景、目標、預期成果等...
+                  required: true
+              - label: 上傳文件
+                properties:
+                  display: 上傳相關文件
+                  type: multifile
+                  description: 上傳與專案相關的文件（可選）
+                  acceptedFileTypes:
+                    - application/pdf
+                    - application/msword
+                    - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+                    - image/png
+                    - image/jpeg
+                    - text/plain
+              - label: 確認提交
+                properties:
+                  display: 確認提交此表單
+                  type: boolean
+                  description: 請確認所有資訊正確無誤
+                  defaultValue: 'false'
+                  required: true
+
+      - name: 顯示輸出結果
+        shell: bash
+        run: |
+          echo "🎉 互動式輸入完成！"
+          echo -e "\n==============================\n"
+          echo "📋 收集到的資訊："
+          echo "姓名: ${{ steps.interactive-inputs.outputs.使用者姓名 }}"
+          echo "電子郵件: ${{ steps.interactive-inputs.outputs.電子郵件 }}"
+          echo "部門: ${{ steps.interactive-inputs.outputs.部門 }}"
+          echo "專案類型: ${{ join(steps.interactive-inputs.outputs.專案類型, ', ') }}"
+          echo "優先級: ${{ steps.interactive-inputs.outputs.優先級 }}"
+          echo "預算範圍: ${{ steps.interactive-inputs.outputs.預算範圍 }}"
+          echo "緊急程度: ${{ steps.interactive-inputs.outputs.緊急程度 }}"
+          echo "確認提交: ${{ steps.interactive-inputs.outputs.確認提交 }}"
+          echo -e "\n==============================\n"
+          echo "📄 專案描述："
+          echo "${{ steps.interactive-inputs.outputs.專案描述 }}"
+          echo -e "\n==============================\n"
+
+      - name: 處理上傳的文件
+        if: steps.interactive-inputs.outputs.上傳文件 != ''
+        shell: bash
+        run: |
+          echo "📁 處理上傳的文件："
+          echo -e "\n==============================\n"
+          ls -la "${{ steps.interactive-inputs.outputs.上傳文件 }}"
+          echo -e "\n==============================\n"
+          echo "文件總數: $(find "${{ steps.interactive-inputs.outputs.上傳文件 }}" -type f | wc -l)"
+
+      - name: 根據選擇執行後續流程
+        if: steps.interactive-inputs.outputs.確認提交 == 'true'
+        run: |
+          echo "✅ 表單已確認提交，開始執行後續流程..."
+          
+          # 根據部門執行不同的流程
+          case "${{ steps.interactive-inputs.outputs.部門 }}" in
+            "工程部")
+              echo "🔧 執行工程部專案流程..."
+              ;;
+            "產品部")
+              echo "📊 執行產品部專案流程..."
+              ;;
+            "設計部")
+              echo "🎨 執行設計部專案流程..."
+              ;;
+            "行銷部")
+              echo "📢 執行行銷部專案流程..."
+              ;;
+            "營運部")
+              echo "⚙️ 執行營運部專案流程..."
+              ;;
+            *)
+              echo "📋 執行一般專案流程..."
+              ;;
+          esac
+          
+          # 根據緊急程度調整處理方式
+          if [[ "${{ steps.interactive-inputs.outputs.緊急程度 }}" == "true" ]]; then
+            echo "🚨 緊急專案！優先處理中..."
+          else
+            echo "📅 一般專案，按正常流程處理..."
+          fi

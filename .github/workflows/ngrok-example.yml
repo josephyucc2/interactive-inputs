@@ -1,0 +1,159 @@
+name: '[範例] 使用 NGROK 的互動式輸入（可選模式）'
+
+on:
+  workflow_dispatch:
+
+jobs:
+  interactive-inputs:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - name: 互動式輸入步驟（使用 NGROK）
+        id: interactive-inputs
+        uses: boasihq/interactive-inputs@v2
+        with:
+          use-network-ip: false  # 明確禁用網路 IP 模式
+          ngrok-authtoken: ${{ secrets.NGROK_AUTHTOKEN }}  # 需要 NGROK token
+          notifier-slack-enabled: "false"
+          notifier-discord-enabled: "false"
+          timeout: 300
+          title: '🌐 使用 NGROK 的互動式輸入範例'
+          interactive: |
+            fields:
+              - label: 概述
+                properties:
+                  type: textarea
+                  description: 此範例展示如何使用 NGROK 模式
+                  defaultValue: "這是一個使用 NGROK 的互動式輸入範例。NGROK 模式提供外部網路存取，適合需要從網際網路訪問的場景。\n\n注意：現在網路 IP 是預設模式，NGROK 變為可選模式。"
+                  readOnly: true
+              - label: 使用者姓名
+                properties:
+                  display: 請輸入您的姓名
+                  type: text
+                  description: 您的完整姓名
+                  maxLength: 50
+                  required: true
+                  placeholder: 例如：張三
+              - label: 電子郵件
+                properties:
+                  display: 電子郵件地址
+                  type: text
+                  description: 用於接收通知的電子郵件
+                  required: true
+                  placeholder: example@company.com
+              - label: 存取方式
+                properties:
+                  display: 選擇存取方式
+                  type: select
+                  description: 您偏好的存取方式
+                  choices:
+                    - 內部網路存取（網路 IP）
+                    - 外部網路存取（NGROK）
+                    - 兩者都可以
+                  required: true
+              - label: 使用場景
+                properties:
+                  display: 選擇使用場景（可多選）
+                  type: multiselect
+                  description: 此互動式輸入的使用場景
+                  choices: 
+                    ["內部測試", "外部展示", "客戶演示", "遠端協作", "CI/CD 流程", "開發測試"]
+                  required: true
+              - label: 安全等級
+                properties:
+                  display: 安全等級要求
+                  type: select
+                  description: 資料的安全等級要求
+                  choices:
+                    - 低（公開資料）
+                    - 中（內部資料）
+                    - 高（機密資料）
+                    - 最高（極機密資料）
+                  required: true
+              - label: 是否需要外部存取
+                properties:
+                  display: 是否需要外部網路存取？
+                  type: boolean
+                  description: 此互動式輸入是否需要從網際網路訪問
+                  defaultValue: 'true'
+                  required: true
+              - label: 備註
+                properties:
+                  display: 額外備註
+                  type: textarea
+                  description: 任何額外的說明或需求
+                  maxLength: 500
+                  placeholder: 請輸入任何額外的說明...
+
+      - name: 顯示輸出結果
+        shell: bash
+        run: |
+          echo "🎉 互動式輸入完成！"
+          echo -e "\n==============================\n"
+          echo "📋 收集到的資訊："
+          echo "姓名: ${{ steps.interactive-inputs.outputs.使用者姓名 }}"
+          echo "電子郵件: ${{ steps.interactive-inputs.outputs.電子郵件 }}"
+          echo "存取方式: ${{ steps.interactive-inputs.outputs.存取方式 }}"
+          echo "使用場景: ${{ join(steps.interactive-inputs.outputs.使用場景, ', ') }}"
+          echo "安全等級: ${{ steps.interactive-inputs.outputs.安全等級 }}"
+          echo "需要外部存取: ${{ steps.interactive-inputs.outputs.是否需要外部存取 }}"
+          echo -e "\n==============================\n"
+          echo "📄 備註："
+          echo "${{ steps.interactive-inputs.outputs.備註 }}"
+          echo -e "\n==============================\n"
+
+      - name: 根據存取方式執行後續流程
+        run: |
+          echo "🔧 根據選擇的存取方式執行後續流程..."
+          
+          case "${{ steps.interactive-inputs.outputs.存取方式 }}" in
+            "內部網路存取（網路 IP）")
+              echo "🏠 使用內部網路存取模式"
+              echo "建議：使用預設的網路 IP 模式，無需額外設定"
+              ;;
+            "外部網路存取（NGROK）")
+              echo "🌐 使用外部網路存取模式"
+              echo "建議：使用 NGROK 模式，需要設定 NGROK token"
+              ;;
+            "兩者都可以")
+              echo "🔄 支援兩種存取模式"
+              echo "建議：根據實際需求選擇合適的模式"
+              ;;
+          esac
+          
+          # 根據安全等級調整處理方式
+          case "${{ steps.interactive-inputs.outputs.安全等級 }}" in
+            "低（公開資料）")
+              echo "🟢 低安全等級：使用標準處理流程"
+              ;;
+            "中（內部資料）")
+              echo "🟡 中安全等級：加強資料保護"
+              ;;
+            "高（機密資料）")
+              echo "🟠 高安全等級：使用加密和嚴格存取控制"
+              ;;
+            "最高（極機密資料）")
+              echo "🔴 最高安全等級：使用最高級別的資料保護措施"
+              ;;
+          esac
+
+      - name: 模式建議
+        run: |
+          echo "💡 模式使用建議："
+          echo -e "\n==============================\n"
+          echo "🌐 網路 IP 模式（預設）："
+          echo "  ✅ 適合內部網路環境"
+          echo "  ✅ 無需外部服務依賴"
+          echo "  ✅ 設定簡單快速"
+          echo "  ❌ 需要網路連通性"
+          echo ""
+          echo "🔗 NGROK 模式（可選）："
+          echo "  ✅ 支援外部網路存取"
+          echo "  ✅ 適合遠端協作"
+          echo "  ✅ 無需網路設定"
+          echo "  ❌ 需要 NGROK 帳戶"
+          echo "  ❌ 依賴外部服務"
+          echo -e "\n==============================\n"

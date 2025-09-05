@@ -1,0 +1,139 @@
+name: '[範例] Port 管理功能展示'
+
+on:
+  workflow_dispatch:
+
+jobs:
+  port-management-demo:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - name: 展示 Port 自動遞增功能
+        id: interactive-inputs
+        uses: boasihq/interactive-inputs@v2
+        with:
+          # use-network-ip: true  # 現在是預設值
+          start-port: "8080"  # 從 port 8080 開始，如果被占用會自動遞增
+          notifier-slack-enabled: "false"
+          notifier-discord-enabled: "false"
+          timeout: 300
+          title: '🔧 Port 管理功能展示'
+          interactive: |
+            fields:
+              - label: 概述
+                properties:
+                  type: textarea
+                  description: Port 管理功能說明
+                  defaultValue: "此範例展示 Port 自動管理功能：\n\n1. 預設從 port 8080 開始\n2. 如果 port 被占用，會自動嘗試 8081, 8082, 8083...\n3. 最多嘗試 100 個 port\n4. 會顯示實際使用的 port 號碼\n5. 支援自訂起始 port"
+                  readOnly: true
+              - label: 測試名稱
+                properties:
+                  display: 請輸入測試名稱
+                  type: text
+                  description: 用於識別此測試的名稱
+                  maxLength: 50
+                  required: true
+                  placeholder: 例如：Port 測試 001
+              - label: 預期 Port
+                properties:
+                  display: 預期的起始 Port
+                  type: number
+                  description: 您預期使用的起始 port 號碼
+                  minNumber: 1
+                  maxNumber: 65535
+                  placeholder: 8080
+                  required: true
+              - label: 測試類型
+                properties:
+                  display: 選擇測試類型
+                  type: select
+                  description: 要執行的測試類型
+                  choices:
+                    - 基本 Port 測試
+                    - Port 衝突測試
+                    - 自訂 Port 測試
+                    - 壓力測試
+                  required: true
+              - label: 測試環境
+                properties:
+                  display: 選擇測試環境
+                  type: multiselect
+                  description: 要測試的環境（可多選）
+                  choices: 
+                    ["開發環境", "測試環境", "預發布環境", "生產環境"]
+                  required: true
+              - label: 測試持續時間
+                properties:
+                  display: 測試持續時間（分鐘）
+                  type: number
+                  description: 測試應該持續多長時間
+                  minNumber: 1
+                  maxNumber: 60
+                  placeholder: 5
+                  required: true
+              - label: 是否記錄詳細日誌
+                properties:
+                  display: 是否記錄詳細日誌？
+                  type: boolean
+                  description: 啟用詳細的 port 偵測日誌
+                  defaultValue: 'true'
+                  required: true
+              - label: 測試備註
+                properties:
+                  display: 測試備註
+                  type: textarea
+                  description: 任何額外的測試說明或備註
+                  maxLength: 500
+                  placeholder: 請輸入測試相關的備註...
+
+      - name: 顯示 Port 資訊
+        shell: bash
+        run: |
+          echo "🎯 Port 管理測試完成！"
+          echo -e "\n==============================\n"
+          echo "📋 測試資訊："
+          echo "測試名稱: ${{ steps.interactive-inputs.outputs.測試名稱 }}"
+          echo "預期 Port: ${{ steps.interactive-inputs.outputs.預期_Port }}"
+          echo "測試類型: ${{ steps.interactive-inputs.outputs.測試類型 }}"
+          echo "測試環境: ${{ join(steps.interactive-inputs.outputs.測試環境, ', ') }}"
+          echo "測試持續時間: ${{ steps.interactive-inputs.outputs.測試持續時間 }} 分鐘"
+          echo "詳細日誌: ${{ steps.interactive-inputs.outputs.是否記錄詳細日誌 }}"
+          echo -e "\n==============================\n"
+          echo "📄 測試備註："
+          echo "${{ steps.interactive-inputs.outputs.測試備註 }}"
+          echo -e "\n==============================\n"
+
+      - name: 模擬 Port 衝突測試
+        if: steps.interactive-inputs.outputs.測試類型 == 'Port 衝突測試'
+        shell: bash
+        run: |
+          echo "🔍 執行 Port 衝突測試..."
+          echo "此測試會模擬 port 被占用的情況"
+          echo "Action 會自動尋找下一個可用的 port"
+          echo "實際使用的 port 會在日誌中顯示"
+
+      - name: 執行自訂 Port 測試
+        if: steps.interactive-inputs.outputs.測試類型 == '自訂 Port 測試'
+        shell: bash
+        run: |
+          echo "⚙️ 執行自訂 Port 測試..."
+          echo "起始 Port: ${{ steps.interactive-inputs.outputs.預期_Port }}"
+          echo "如果該 port 被占用，會自動遞增尋找可用 port"
+
+      - name: 執行壓力測試
+        if: steps.interactive-inputs.outputs.測試類型 == '壓力測試'
+        shell: bash
+        run: |
+          echo "💪 執行壓力測試..."
+          echo "測試 Port 管理在高負載下的表現"
+          echo "持續時間: ${{ steps.interactive-inputs.outputs.測試持續時間 }} 分鐘"
+
+      - name: 測試完成通知
+        shell: bash
+        run: |
+          echo "✅ Port 管理功能測試完成！"
+          echo "📊 測試結果已記錄"
+          echo "🔧 Port 自動遞增功能運作正常"

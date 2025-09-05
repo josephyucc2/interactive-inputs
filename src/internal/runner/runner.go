@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
+	"net"
 	"net/http"
 	"os"
 	"time"
@@ -150,9 +151,27 @@ func InvokeAction(ctx context.Context, ctxCancel context.CancelFunc, cfg *config
 	notifierDiscordEnterInputMessageTmpl := "[**Enter required input**](%s)"
 	universalNotifierFailedToSelfHost := "A failure has occurred while starting/running your self-hosted portal: %v"
 
+	// Determine whether to use ngrok, network IP, or localhost
+	useNetworkIP := cfg.UseNetworkIP
+	var networkIP string
+	var err error
+
+	if useNetworkIP {
+		if cfg.NetworkIP != "" {
+			networkIP = cfg.NetworkIP
+		} else {
+			networkIP, err = getNetworkIP()
+			if err != nil {
+				cfg.Action.Errorf("Failed to detect network IP: %v", err)
+				return err
+			}
+		}
+		cfg.Action.Debugf("Using network IP: %s", networkIP)
+	}
+
 	// TODO: Add a flag to enable/disable the ngrok tunnel respsective
 	// of whether the action is running locally or not
-	if !isRunningLocal {
+	if !isRunningLocal && !useNetworkIP {
 		ln, err := ngrok.Listen(ctx,
 			nconfig.HTTPEndpoint(),
 			ngrok.WithAuthtoken(cfg.NgrokAuthtoken),
@@ -207,9 +226,28 @@ func InvokeAction(ctx context.Context, ctxCancel context.CancelFunc, cfg *config
 		}()
 
 	} else {
-		localPort := ":8080"
+		// Find an available port starting from the configured start port
+		availablePort, err := findAvailablePort(cfg.StartPort)
+		if err != nil {
+			cfg.Action.Errorf("Failed to find available port: %v", err)
+			return err
+		}
+		
+		if availablePort != cfg.StartPort {
+			cfg.Action.Debugf("Port %d was occupied, using port %d instead", cfg.StartPort, availablePort)
+		}
+		
+		localPort := fmt.Sprintf(":%d", availablePort)
 		server := &http.Server{Addr: localPort, Handler: r}
-		completeLocalUrl := fmt.Sprintf("http://localhost%s", localPort)
+		
+		var completeLocalUrl string
+		if useNetworkIP {
+			completeLocalUrl = fmt.Sprintf("http://%s:%d", networkIP, availablePort)
+		} else {
+			completeLocalUrl = fmt.Sprintf("http://localhost:%d", availablePort)
+		}
+		
+		cfg.Action.Debugf("Using port: %d", availablePort)
 		serverInitMessage := fmt.Sprintf(serverInitMessageTmpl, completeLocalUrl)
 
 		cfg.Action.Noticef(serverInitMessage)
@@ -270,11 +308,46 @@ func InvokeAction(ctx context.Context, ctxCancel context.CancelFunc, cfg *config
 // handlePrettierTimeoutErrorMessage is a helper function that prints a nicer error message
 // when the context deadline is exceeded. Otherwise, it returns the original error.
 func handlePrettierTimeoutErrorMessage(err error, timeout int) error {
-	// Print nicer timeout message
-	if err != nil && err.Error() == "context deadline exceeded" {
-		//nolint:go-staticcheck
-		return fmt.Errorf("Your session has expired (timed out) due to inactivity for %d seconds", timeout)
+	if err == context.DeadlineExceeded {
+		return fmt.Errorf("the interactive inputs portal timed out after %d seconds", timeout)
 	}
-
 	return err
+}
+
+// getNetworkIP detects the network IP address of the runner
+func getNetworkIP() (string, error) {
+	// Try to connect to a remote address to determine the local IP
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		return "", fmt.Errorf("failed to get network IP: %v", err)
+	}
+	defer conn.Close()
+
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+	return localAddr.IP.String(), nil
+}
+
+// isPortAvailable checks if a port is available for use
+func isPortAvailable(port int) bool {
+	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	if err != nil {
+		return false
+	}
+	ln.Close()
+	return true
+}
+
+// findAvailablePort finds an available port starting from the given port
+func findAvailablePort(startPort int) (int, error) {
+	maxAttempts := 100
+	for i := 0; i < maxAttempts; i++ {
+		port := startPort + i
+		if port > 65535 {
+			break
+		}
+		if isPortAvailable(port) {
+			return port, nil
+		}
+	}
+	return 0, fmt.Errorf("no available port found starting from %d (checked ports %d-%d)", startPort, startPort, startPort+maxAttempts-1)
 }
