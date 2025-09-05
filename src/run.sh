@@ -70,7 +70,7 @@ env \
       type: multiselect
       disableAutoCopySelection: true
       choices: 
-        ["Red", "Green", "Blue", "Orange", "Purple", "Pink", "Yellow"]
+        ["A","A","A","A","A","A","A","Red", "Green", "Blue", "Orange", "Purple", "Pink", "Yellow", "Orange", "Purple", "Pink", "Yellow", "Orange", "Purple", "Pink", "Yellow", "Orange", "Purple", "Pink", "Yellow", "Orange", "Purple", "Pink", "Yellow", "Orange", "Purple", "Pink", "Yellow", "Purple", "Pink", "Yellow", "Orange", "Purple", "Pink", "Yellow"]
       required: true
   - label: verify
     properties:
