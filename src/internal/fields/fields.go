@@ -1,6 +1,8 @@
 package fields
 
 import (
+	"bufio"
+	"os"
 	"strings"
 
 	"github.com/boasihq/interactive-inputs/internal/errors"
@@ -42,6 +44,7 @@ type Field struct {
 // Type is the type of the field, such as "text" or "options".
 // Description is a description of the field to show the user.
 // Choices is a list of options to display for the field if the Type is "options".
+// ChoicesFilePath is the path to a text file containing choices (one per line).
 // Required indicates whether the field must be filled out.
 // MaxLength is the maximum length of the field's value.
 // DisableAutoCopySelection is whether the field should stop automatically coping the selected option to the clipboard (valid fields: select, multiselect).
@@ -50,6 +53,7 @@ type FieldProperties struct {
 	Type                     string   `yaml:"type"`
 	Description              string   `yaml:"description"`
 	Choices                  []string `yaml:"choices"`
+	ChoicesFilePath          string   `yaml:"choicesFilePath"`
 	Required                 bool     `yaml:"required"`
 	MaxLength                int      `yaml:"maxLength"`
 	Placeholder              string   `yaml:"placeholder"`
@@ -122,4 +126,46 @@ func MarshalStringIntoValidFieldsStruct(fieldsString string, action *githubactio
 	}
 
 	return &fields, nil
+}
+
+// LoadChoicesFromFile reads choices from a text file where each line represents one choice.
+// It returns a slice of strings containing the choices, with empty lines and whitespace-only lines filtered out.
+func LoadChoicesFromFile(filePath string) ([]string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var choices []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line != "" {
+			choices = append(choices, line)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return choices, nil
+}
+
+// GetChoices returns the choices for a field, either from the Choices field or by loading from ChoicesFilePath.
+// If both are provided, Choices takes precedence.
+func (fp *FieldProperties) GetChoices() ([]string, error) {
+	// If choices are directly provided, use them
+	if len(fp.Choices) > 0 {
+		return fp.Choices, nil
+	}
+
+	// If choicesFilePath is provided, load from file
+	if fp.ChoicesFilePath != "" {
+		return LoadChoicesFromFile(fp.ChoicesFilePath)
+	}
+
+	// No choices provided
+	return []string{}, nil
 }

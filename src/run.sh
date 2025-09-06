@@ -69,8 +69,7 @@ env \
       display: What are your favourite colours
       type: multiselect
       disableAutoCopySelection: true
-      choices: 
-        ["A","A","A","A","A","A","A","Red", "Green", "Blue", "Orange", "Purple", "Pink", "Yellow", "Orange", "Purple", "Pink", "Yellow", "Orange", "Purple", "Pink", "Yellow", "Orange", "Purple", "Pink", "Yellow", "Orange", "Purple", "Pink", "Yellow", "Orange", "Purple", "Pink", "Yellow", "Purple", "Pink", "Yellow", "Orange", "Purple", "Pink", "Yellow"]
+      choicesFilePath: ../test-simple.txt
       required: true
   - label: verify
     properties:

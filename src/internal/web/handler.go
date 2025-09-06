@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/boasihq/interactive-inputs/internal/config"
+	"github.com/boasihq/interactive-inputs/internal/fields"
 	"github.com/boasihq/interactive-inputs/internal/toolbox"
 	githubactions "github.com/sethvargo/go-githubactions"
 	"go.uber.org/zap"
@@ -58,10 +59,14 @@ func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 
 	// shape the request
 	repoOwner, _ := actionContext.Repo()
+	
+	// Pre-process fields to load choices from files if needed
+	processedFields := h.preprocessFields(h.config.Fields)
+	
 	response = &CreateInteractiveInputsPortalRequest{
 		RepoOwner: repoOwner,
 		Title:     h.config.Title,
-		Fields:    h.config.Fields,
+		Fields:    processedFields,
 		Timeout:   toolbox.SecondsToMinutes(h.config.Timeout),
 	}
 
@@ -88,4 +93,35 @@ func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
+}
+
+// preprocessFields processes fields to load choices from files if needed
+func (h *Handler) preprocessFields(fieldsData *fields.Fields) *fields.Fields {
+	if fieldsData == nil {
+		return nil
+	}
+
+	// Create a deep copy of the fields
+	processedFields := &fields.Fields{
+		Fields: make([]fields.Field, len(fieldsData.Fields)),
+	}
+
+	for i, field := range fieldsData.Fields {
+		processedFields.Fields[i] = field
+		
+		// If choicesFilePath is provided, load choices from file
+		if field.Properties.ChoicesFilePath != "" {
+			choices, err := field.Properties.GetChoices()
+			if err != nil {
+				h.action.Warningf("Failed to load choices from file '%s' for field '%s': %v", 
+					field.Properties.ChoicesFilePath, field.Label, err)
+				// Keep the original choices if file loading fails
+			} else {
+				// Update the choices with the loaded values
+				processedFields.Fields[i].Properties.Choices = choices
+			}
+		}
+	}
+
+	return processedFields
 }
