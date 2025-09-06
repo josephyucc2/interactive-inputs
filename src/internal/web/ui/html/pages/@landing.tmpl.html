@@ -100,8 +100,7 @@
                       $inputAcceptedFileTypes }} accept="{{range $inputAcceptedFileTypes}}{{.}},{{end}}" {{end}}
                       class="absolute" {{ if eq $inputType "multifile" }}multiple{{end}}>
                     <span
-                      x-html="files ? files.map(file => `<span class='badge badge-ghost'>${file.name}</span>`).join(' ') : '{{ if eq $inputType "
-                      multifile" }}Tap to select one or more files{{else}}Tap to select your file{{end}}'"></span>
+                      x-html="files ? files.map(file => `<span class='badge badge-ghost'>${file.name}</span>`).join(' ') : '{{ if eq $inputType "multifile" }}Tap to select one or more files{{else}}Tap to select your file{{end}}'"></span>
                   </label>
 
                   <span class="flex md:ml-4 space-x-2">
