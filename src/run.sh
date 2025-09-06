@@ -1,15 +1,19 @@
+# 設定配置檔案路徑
+CONFIG_FILE_PATH="$(pwd)/../other-workflow/config.txt"
+
 env \
   'GITHUB_API_URL=https://api.github.com' \
   'GITHUB_REPOSITORY=blend/repo-that-uses-an-action' \
   "GITHUB_ACTOR=$(whoami)" \
   "GITHUB_WORKSPACE=$(pwd)/.." \
+  "CONFIG_FILE_PATH=$CONFIG_FILE_PATH" \
   "INPUT_TITLE=Start something exciting, dynamically..." \
-  'INPUT_INTERACTIVE=fields:
+  "INPUT_INTERACTIVE=fields:
   - label: overview
     properties:
       type: textarea
       description: Information on what this action does
-      defaultValue: "This example is a powerful demonstration of how you can utilize the boasiHQ/interactive-inputs action to tailor the dynamic portal to your specific needs and desired output."
+      defaultValue: \"This example is a powerful demonstration of how you can utilize the boasiHQ/interactive-inputs action to tailor the dynamic portal to your specific needs and desired output.\"
       readOnly: true
   - label: custom-file
     properties:
@@ -69,14 +73,14 @@ env \
       display: What are your favourite colours
       type: multiselect
       disableAutoCopySelection: true
-      choicesFilePath: ../test-simple.txt
+      choicesFilePath: $CONFIG_FILE_PATH
       required: true
   - label: verify
     properties:
       display: Are you sure you want to continue?
       defaultValue: 'false'
       type: boolean
-      required: true' \
+      required: true" \
   'INPUT_NOTIFIER-SLACK-ENABLED=false' \
   'INPUT_NOTIFIER-SLACK-TOKEN=xoxb-secret-token' \
   'INPUT_NOTIFIER-SLACK-CHANNEL=#random' \

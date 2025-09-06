@@ -56,6 +56,7 @@
             {{$inputType := $interactiveInput.Properties.Type }}
             {{$inputDescription := $interactiveInput.Properties.Description }}
             {{$inputChoices := $interactiveInput.Properties.Choices }}
+            {{$inputChoicesFilePath := $interactiveInput.Properties.ChoicesFilePath }}
             {{$inputRequired := $interactiveInput.Properties.Required }}
             {{$inputMaxLength := $interactiveInput.Properties.MaxLength }}
             {{$inputPlaceholder := $interactiveInput.Properties.Placeholder }}
@@ -99,7 +100,8 @@
                       $inputAcceptedFileTypes }} accept="{{range $inputAcceptedFileTypes}}{{.}},{{end}}" {{end}}
                       class="absolute" {{ if eq $inputType "multifile" }}multiple{{end}}>
                     <span
-                      x-html="files ? files.map(file => `<span class='badge badge-ghost'>${file.name}</span>`).join(' ') : '{{ if eq $inputType "multifile" }}Tap to select one or more files{{else}}Tap to select your file{{end}}'"></span>
+                      x-html="files ? files.map(file => `<span class='badge badge-ghost'>${file.name}</span>`).join(' ') : '{{ if eq $inputType "
+                      multifile" }}Tap to select one or more files{{else}}Tap to select your file{{end}}'"></span>
                   </label>
 
                   <span class="flex md:ml-4 space-x-2">
@@ -224,6 +226,11 @@
                   <option>{{ $choiceValue }}</option>
                   {{end}}
                 </select>
+                {{ if $inputChoicesFilePath }}
+                <div class="mt-2 text-xs text-gray-500">
+                  <span class="font-medium">檔案路徑:</span> {{ $inputChoicesFilePath }}
+                </div>
+                {{ end }}
               </div>
             </div>
             {{ end }}
@@ -273,6 +280,11 @@
                   <option>{{ $choiceValue }}</option>
                   {{end}}
                 </select>
+                {{ if $inputChoicesFilePath }}
+                <div class="mt-2 text-xs text-gray-500">
+                  <span class="font-medium">Config file path:</span> {{ $inputChoicesFilePath }}
+                </div>
+                {{ end }}
               </div>
             </div>
             {{ end }}
