@@ -17,4 +17,8 @@ type CreateInteractiveInputsPortalRequest struct {
 	// Timeout is how long the portal will be available for users to use before it is
 	// automatically deactivated
 	Timeout string
+
+	// BasePath is the URL prefix for form actions (empty string for action mode,
+	// "/portal/{session-id}" for server mode)
+	BasePath string
 }

@@ -10,6 +10,7 @@
         <h2 class="text-xl font-medium pb-5">Cancellation Request Received</h2>
         <p>Thank you for using <br><a href="https://interactiveinputs.com" target="_blank"><b>Interactive Inputs</b></a></p>
 
+        {{ if .JobUrl }}
         <a href="{{ .JobUrl }}" target="_blank">
             <button type="submit" class="btn btn-wide btn-md mt-6">Return to run
                 <svg id="material-symbols:arrow-forward" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
@@ -18,5 +19,8 @@
                 </svg>
             </button>
         </a>
+        {{ else }}
+        <p class="mt-6 text-gray-500">You may close this tab.</p>
+        {{ end }}
     </div>
 </div>
