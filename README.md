@@ -63,6 +63,26 @@ To get started, there are three main steps:
 2. Add this action `boasihq/interactive-inputs@v2` to your workflow file. See below the [various example implemenations](#example) for inspiration.
 3. Use the predictable output variables from your interactive input portal to create dynamic workflows.
 
+### Windows runner installation
+
+Windows x64 and ARM64 binaries are included in `dist/`. To install persistent server mode on a self-hosted Windows runner, open Administrator PowerShell from the repository root:
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+.\scripts\install-windows.ps1 -Action Install -Port 9090
+```
+
+The installer copies the matching binary into `%ProgramData%\InteractiveInputs`, registers an auto-restarting startup task under `SYSTEM`, allows inbound TCP 9090 from `LocalSubnet`, starts the server, and verifies `http://127.0.0.1:9090/health`.
+
+Check or remove the installation with:
+
+```powershell
+.\scripts\install-windows.ps1 -Action Status -Port 9090
+.\scripts\install-windows.ps1 -Action Uninstall -RemoveFiles
+```
+
+For GitHub Action mode, `invoke-binary.js` automatically selects the Windows binary. For persistent mode, workflows can create sessions through `POST http://localhost:9090/api/sessions` and wait through `GET /api/sessions/{id}/wait`.
+
 > Note, this action requires an ARM64 or AMD64 (x86) runner to run i.e. `ubuntu-latest`
 
 ### Hosting Methods

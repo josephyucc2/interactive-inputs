@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -53,6 +54,10 @@ func (s *Server) AttachRoutes(router *mux.Router) {
 		log.Fatalf("unable to create static asset filesystem: %v", err)
 	}
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.FS(staticSubFS))))
+	router.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+	}).Methods("GET")
 
 	// REST API
 	api := router.PathPrefix("/api/sessions").Subrouter()
@@ -379,7 +384,7 @@ func (s *Server) PortalUpload(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		err = os.WriteFile(fmt.Sprintf("%s/%s", inputCacheDir, handler.Filename), fileBytes, 0644)
+		err = os.WriteFile(filepath.Join(inputCacheDir, filepath.Base(handler.Filename)), fileBytes, 0644)
 		if err != nil {
 			failedFiles = append(failedFiles, handler.Filename)
 			continue
@@ -431,7 +436,7 @@ func (s *Server) PortalResetUpload(w http.ResponseWriter, r *http.Request) {
 
 	var deletedFiles []string
 	for _, entry := range entries {
-		fullPath := fmt.Sprintf("%s/%s", cacheDir, entry.Name())
+		fullPath := filepath.Join(cacheDir, entry.Name())
 		if err := os.RemoveAll(fullPath); err == nil {
 			deletedFiles = append(deletedFiles, entry.Name())
 		}

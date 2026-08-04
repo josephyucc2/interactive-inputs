@@ -8,9 +8,9 @@ const CPU_ARCH = os.arch();
 
 function chooseBinary ()
 {
-    if ( PLATFORM !== 'linux' && PLATFORM !== 'darwin' )
+    if ( PLATFORM !== 'linux' && PLATFORM !== 'darwin' && PLATFORM !== 'win32' )
     {
-        throw new Error( 'Only linux and macOS are supported' );
+        throw new Error( 'Only Linux, macOS and Windows are supported' );
     }
 
     if ( CPU_ARCH !== 'x64' && CPU_ARCH !== 'arm64' )
@@ -36,6 +36,16 @@ function chooseBinary ()
     if ( PLATFORM === 'darwin' && CPU_ARCH === 'arm64' )
     {
         return `action-darwin-arm64`;
+    }
+
+    // Windows binaries
+    if ( PLATFORM === 'win32' && CPU_ARCH === 'x64' )
+    {
+        return `action-windows-amd64.exe`;
+    }
+    if ( PLATFORM === 'win32' && CPU_ARCH === 'arm64' )
+    {
+        return `action-windows-arm64.exe`;
     }
 }
 

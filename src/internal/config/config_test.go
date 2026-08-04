@@ -33,8 +33,9 @@ func TestConfig_NewFromInputs(t *testing.T) {
 				"INPUT_NGROK-AUTHTOKEN": "ngrok-secret-token",
 			},
 			expectedConfig: config.Config{
-				Timeout: 300,
-				Title:   "What name should be given to the barista?",
+				Timeout:   300,
+				StartPort: config.DefaultStartPort,
+				Title:     "What name should be given to the barista?",
 				Fields: &fields.Fields{
 					Fields: []fields.Field{
 						{
@@ -73,8 +74,9 @@ func TestConfig_NewFromInputs(t *testing.T) {
 				"INPUT_NGROK-AUTHTOKEN": "ngrok-secret-token",
 			},
 			expectedConfig: config.Config{
-				Timeout: 240,
-				Title:   "What name should be given to the barista?",
+				Timeout:   240,
+				StartPort: config.DefaultStartPort,
+				Title:     "What name should be given to the barista?",
 				Fields: &fields.Fields{
 					Fields: []fields.Field{
 						{
@@ -113,8 +115,9 @@ func TestConfig_NewFromInputs(t *testing.T) {
 				"INPUT_NGROK-AUTHTOKEN": "ngrok-secret-token",
 			},
 			expectedConfig: config.Config{
-				Timeout: 300,
-				Title:   "",
+				Timeout:   300,
+				StartPort: config.DefaultStartPort,
+				Title:     "",
 				Fields: &fields.Fields{
 					Fields: []fields.Field{
 						{
@@ -153,8 +156,9 @@ func TestConfig_NewFromInputs(t *testing.T) {
 				"INPUT_NGROK-AUTHTOKEN": "ngrok-secret-token",
 			},
 			expectedConfig: config.Config{
-				Timeout: 300,
-				Title:   "Where should application be deployed?",
+				Timeout:   300,
+				StartPort: config.DefaultStartPort,
+				Title:     "Where should application be deployed?",
 				Fields: &fields.Fields{
 					Fields: []fields.Field{
 						{

@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -79,7 +80,7 @@ func (m *Manager) CreateSession(title string, fieldsData *fields.Fields, timeout
 
 	// Create cache dirs for file/multifile fields
 	if fieldsData != nil {
-		baseCacheDir := fmt.Sprintf("/tmp/interactive-inputs-sessions/%s/cache", id)
+		baseCacheDir := filepath.Join(os.TempDir(), "interactive-inputs-sessions", id, "cache")
 		for _, f := range fieldsData.Fields {
 			if f.Properties.Type != "file" && f.Properties.Type != "multifile" {
 				continue

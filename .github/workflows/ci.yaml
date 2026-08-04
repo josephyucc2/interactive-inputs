@@ -22,3 +22,8 @@ jobs:
         run: |
           cd src 
           go test -v  ./...
+      - name: Cross-compile Windows binaries
+        run: |
+          cd src
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o ../dist/action-windows-amd64.exe .
+          CGO_ENABLED=0 GOOS=windows GOARCH=arm64 go build -o ../dist/action-windows-arm64.exe .

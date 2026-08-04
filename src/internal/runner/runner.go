@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/boasihq/interactive-inputs/internal/config"
@@ -85,7 +86,7 @@ func InvokeAction(ctx context.Context, ctxCancel context.CancelFunc, cfg *config
 	// during the action run
 	if cfg.Fields != nil {
 		var err error
-		var baseCacheDir string = fmt.Sprintf("%s/.__interactive-inputs-cache", os.Getenv("GITHUB_WORKSPACE"))
+		var baseCacheDir string = filepath.Join(os.Getenv("GITHUB_WORKSPACE"), ".__interactive-inputs-cache")
 
 		// check fields for file and multifile input fields
 		for _, v := range cfg.Fields.Fields {
@@ -235,21 +236,21 @@ func InvokeAction(ctx context.Context, ctxCancel context.CancelFunc, cfg *config
 			cfg.Action.Errorf("Failed to find available port: %v", err)
 			return err
 		}
-		
+
 		if availablePort != cfg.StartPort {
 			cfg.Action.Debugf("Port %d was occupied, using port %d instead", cfg.StartPort, availablePort)
 		}
-		
+
 		localPort := fmt.Sprintf(":%d", availablePort)
 		server := &http.Server{Addr: localPort, Handler: r}
-		
+
 		var completeLocalUrl string
 		if useNetworkIP {
 			completeLocalUrl = fmt.Sprintf("http://%s:%d", networkIP, availablePort)
 		} else {
 			completeLocalUrl = fmt.Sprintf("http://localhost:%d", availablePort)
 		}
-		
+
 		cfg.Action.Debugf("Using port: %d", availablePort)
 		serverInitMessage := fmt.Sprintf(serverInitMessageTmpl, completeLocalUrl)
 

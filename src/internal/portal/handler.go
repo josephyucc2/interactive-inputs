@@ -7,7 +7,7 @@ import (
 	"io/fs"
 	"net/http"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 	"text/template"
 	"time"
@@ -321,7 +321,7 @@ Cache clean overview:
 
 		// create placeholder file in temp directory to hold uploaded file
 		inputCacheDir := h.getInputFieldCacheDir(inputFieldLabel)
-		err = os.WriteFile(fmt.Sprintf("%s/%s", inputCacheDir, handler.Filename), fileBytes, 0644)
+		err = os.WriteFile(filepath.Join(inputCacheDir, filepath.Base(handler.Filename)), fileBytes, 0644)
 		if err != nil {
 			h.actionPkg.Errorf("[%d of %d] Unable to write file to input field cache dir: %s", fileCount, totalFiles, inputCacheDir)
 			failedFileUploads = append(failedFileUploads, handler.Filename)
@@ -465,7 +465,7 @@ func (h *Handler) cleanUpCacheDir(inputFieldLabel string, enableDebugOutput bool
 	}
 
 	for _, content := range readCacheDir {
-		contentFullPath := path.Join([]string{cacheDir, content.Name()}...)
+		contentFullPath := filepath.Join(cacheDir, content.Name())
 
 		h.actionPkg.Debugf("  • Removing file: %s (%s)", content.Name(), contentFullPath)
 		err = os.RemoveAll(contentFullPath)
